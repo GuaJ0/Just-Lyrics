@@ -331,10 +331,51 @@ ytmusic-player-page:before { /* Cool blured background with Blyrics! */
   transform-origin: center center !important;
 }
 
-/* Duet singers get a right-edge origin from a more specific blyrics rule */
+/* Solo songs: every line stays centered, even if blyrics tags it with a singer */
 .blyrics-container > .blyrics--line[data-agent],
 .blyrics-container > .blyrics--line[data-direction] {
   transform-origin: center center !important;
+}
+
+/* Duets: only kicks in when a second singer (v2/v3) appears in the song.
+   Main singer sits on the left, other singers on the right, and whichever
+   line is being sung moves to the center. */
+.blyrics-container:has(> .blyrics--line[data-agent="v2"], > .blyrics--line[data-agent="v3"]) {
+
+  /* Main singer on the left */
+  & > .blyrics--line:not(.blyrics--active) {
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+    transform-origin: left center !important;
+  }
+
+  /* Other singers on the right */
+  & > .blyrics--line:is([data-agent="v2"], [data-agent="v3"]):not(.blyrics--active) {
+    justify-content: flex-end !important;
+    align-items: flex-end !important;
+    text-align: right !important;
+    transform-origin: right center !important;
+  }
+
+  /* Everyone singing together, instrumental breaks, and the current line stay centered */
+  & > .blyrics--line[data-agent="v1000"],
+  & > .blyrics--line.blyrics--instrumental,
+  & > .blyrics--line.blyrics--active {
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    transform-origin: center center !important;
+  }
+
+  /* Background vocals and romanization follow their line's side */
+  & > .blyrics--line .blyrics-background-line {
+    text-align: inherit !important;
+  }
+  & > .blyrics--line.blyrics--active .blyrics--romanized {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
 }
 
 /* Soft fade at top and bottom so lyrics "scroll into view" */
