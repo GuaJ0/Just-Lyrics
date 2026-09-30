@@ -326,6 +326,15 @@ ytmusic-player-page:before { /* Cool blured background with Blyrics! */
   width: 100% !important;
   display: flex !important;
   justify-content: center !important;
+  /* Blyrics scales lines from the left edge, which shoves the smaller
+     inactive lines left of the active one. Scale from the center instead. */
+  transform-origin: center center !important;
+}
+
+/* Duet singers get a right-edge origin from a more specific blyrics rule */
+.blyrics-container > .blyrics--line[data-agent],
+.blyrics-container > .blyrics--line[data-direction] {
+  transform-origin: center center !important;
 }
 
 /* Soft fade at top and bottom so lyrics "scroll into view" */
@@ -767,21 +776,11 @@ body:has(ytmusic-player-bar[player-fullscreened]) ytmusic-player-bar {
   left: 0 !important;
   width: 100vw !important;
   z-index: 9999 !important;
-  opacity: 0 !important;
+  opacity: 1 !important;
   transition: opacity 0.3s ease !important;
   background: linear-gradient(transparent, rgba(0,0,0,0.85) 60%) !important;
   backdrop-filter: none !important;
   padding-bottom: 12px !important;
-}
-
-/* Fade in on hover */
-body:has(ytmusic-player-bar[player-fullscreened]) ytmusic-player-bar:hover {
-  opacity: 1 !important;
-}
-
-/* Also reveal when paused */
-body:has(ytmusic-player-bar[player-fullscreened][player-paused]) ytmusic-player-bar {
-  opacity: 1 !important;
 }
 
 ytmusic-nav-bar[is-bauhaus-sidenav-enabled] .right-content.ytmusic-nav-bar {padding-right: 8px !important; } 
