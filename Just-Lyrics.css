@@ -198,12 +198,13 @@ $glassy-ui: false; // ==== WARNING: THIS WILL AFFECT THE PERFORMANCE ====
   }
 
 
+  /* Dots are centered on x=12, the middle of blyrics' 24-wide icon box */
   .blyrics--instrumental-bg, .blyrics--instrumental-fill {
-    d: path("M10 6A1 1 0 0010 20 1 1 0 0010 6M32 6A1 1 0 0032 20 1 1 0 0032 6M54 6A1 1 0 0054 20 1 1 0 0054 6");
+    d: path("M-10 6A1 1 0 00-10 20 1 1 0 00-10 6M12 6A1 1 0 0012 20 1 1 0 0012 6M34 6A1 1 0 0034 20 1 1 0 0034 6");
   }
 
   .blyrics--wave-rect {
-    d: path("M -4 3.9 L 67 4 L 67 30 L -4 30 Z");
+    d: path("M -24 3.9 L 47 4 L 47 30 L -24 30 Z");
   }
 
 
@@ -331,6 +332,13 @@ ytmusic-player-page:before { /* Cool blured background with Blyrics! */
   transform-origin: center center !important;
 }
 
+/* Blyrics pulls the instrumental icon left to line up with left-aligned
+   lyrics; the lines here are centered, so drop that offset */
+.blyrics--instrumental .blyrics--instrumental-icon {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
 /* Solo songs: every line stays centered, even if blyrics tags it with a singer */
 .blyrics-container > .blyrics--line[data-agent],
 .blyrics-container > .blyrics--line[data-direction] {
@@ -375,6 +383,16 @@ ytmusic-player-page:before { /* Cool blured background with Blyrics! */
   & > .blyrics--line.blyrics--active .blyrics--romanized {
     margin-left: auto !important;
     margin-right: auto !important;
+  }
+}
+
+/* Blyrics only makes the lyrics scrollbar transparent, so it still eats
+   ~15px on the right and nudges the lyrics left. Remove it entirely;
+   scrolling with the wheel or trackpad still works. */
+#tab-renderer[page-type="MUSIC_PAGE_TYPE_TRACK_LYRICS"] {
+  scrollbar-width: none !important;
+  &::-webkit-scrollbar {
+    display: none !important;
   }
 }
 
