@@ -105,28 +105,34 @@ $glassy-ui: false; // ==== WARNING: THIS WILL AFFECT THE PERFORMANCE ====
 @if $new-lyric-style == true {
 
 
-/* Smooth word glow — no hard box edges */
-.blyrics--word::after {
-  --blyrics-glow-color: color(display-p3 1 1 1 / 0);
-  border-radius: 50% !important;
-  filter: blur(18px) !important;
-  transform: scaleX(0.75) scaleY(0.5) !important;
-  opacity: 0.6 !important;
+/* Smooth word glow.
+   Blyrics builds each word's glow as filter: drop-shadow(0 0 <radius> var(--blyrics-glow-color)),
+   read off the word itself — see @braccato/core's engine.js, which documents
+   .blyrics--word[data-long-word] { --blyrics-glow-color: ... } as the override point.
+   This previously targeted .blyrics--word::after, a pseudo-element with no `content`
+   that never rendered, so the color/blur below never reached the real glow — it was
+   still running at the engine's default 0.8rem radius, which is wide and opaque
+   enough on this bold 5.5rem font to blur adjacent letters into one solid block
+   instead of a halo per letter. Scoping it to the real element (and shrinking the
+   radius) is what actually softens it. */
+:root {
+  --blyrics-highlight-glow-radius-from: 0.3rem;
+  --blyrics-highlight-glow-radius-to: 0rem;
 }
 
-.blyrics--word[data-long-word="true"]::after {
-  --blyrics-glow-color: color(display-p3 1 1 1 / 0.9);
-  border-radius: 50% !important;
-  filter: blur(22px) !important;
-  transform: scaleX(0.8) scaleY(0.55) !important;
-  opacity: 0.75 !important;
+.blyrics--word {
+  --blyrics-glow-color: color(display-p3 1 1 1 / 0.3);
 }
 
-/* Smooth the highlight text itself */
+.blyrics--word[data-long-word="true"] {
+  --blyrics-glow-color: color(display-p3 1 1 1 / 0.5);
+}
+
+/* Smooth the highlight text itself. Kept tight to match the drop-shadow glow
+   above — the old 20px/40px double shadow was wide enough on this bold font
+   to fuse adjacent letters into a block on its own. */
 .blyrics-highlight-run {
-  text-shadow: 
-    0 0 20px rgba(255, 255, 255, 0.4),
-    0 0 40px rgba(255, 255, 255, 0.15) !important;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3) !important;
   transition: text-shadow 0.3s ease !important;
 }
 
@@ -139,9 +145,6 @@ $glassy-ui: false; // ==== WARNING: THIS WILL AFFECT THE PERFORMANCE ====
     /* Add shadow to lyric*/
   .blyrics-bidi-run {
     text-shadow: 0 .3rem .5rem rgba(0, 0, 0, .15);
-  }
-  .blyrics-highlight-run {
-    text-shadow: none;
   }
 
 	/* Push background vocals onto their own line below the main lyric */
