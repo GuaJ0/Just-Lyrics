@@ -792,12 +792,18 @@ ytmusic-nav-bar[is-bauhaus-sidenav-enabled] .right-content.ytmusic-nav-bar {padd
 
 /* ==================================
     Lyrics-only mode
-    Hides album art when lyrics tab is active
+    Hides album art (or video) when lyrics tab is active
 ====================================*/
-ytmusic-player-page:not([video-mode]):has(tp-yt-paper-tab.ytmusic-player-page:nth-child(3)[aria-selected="true"]) {
+/* Triggered off #tab-renderer's own page-type attribute rather than counting
+   which tab is nth-child(3) — that position shifts (and silently stops
+   matching) whenever YTM's tab strip gains or drops a tab, e.g. a track with
+   a video adds one. Also no longer excludes [video-mode]: a track with a
+   video should still have it hidden while reading lyrics, same as album art. */
+ytmusic-player-page:has(#tab-renderer[page-type="MUSIC_PAGE_TYPE_TRACK_LYRICS"]) {
 
-  /* Hide the album art panel */
-  #main-panel.ytmusic-player-page {
+  /* Hide the album art / video panel */
+  #main-panel.ytmusic-player-page,
+  #player.ytmusic-player-page {
     display: none !important;
   }
 
