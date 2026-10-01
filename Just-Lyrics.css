@@ -14,10 +14,6 @@ Thanks to the following themes for some of their code
 - Lucid by drago-oo
 */
 
-/*
-blyrics-letter-wave = true
-*/
-
 /* Configurable variables */
 $title-bar-color: #000000; // Set this as the same color as your titlebar if using PWA
 $background-color: #000000; // background color of most ui elements
@@ -44,14 +40,8 @@ $center-search-bar: false; // Buggy so its disabled by default
 
 $uwu-mode: false; // WIP lol
 
-/* !!!!WIP!!!!
-$ultra-performance-mode: false; // disable most animations and blur effects
-$glow-effects: false; // uses a glowing effect on more elements
-$glassy-ui: false; // ==== WARNING: THIS WILL AFFECT THE PERFORMANCE ====
-*/
 
-
-:root {  
+:root {
   /* blyrics config, feel free to edit this */
   --blyrics-footer-bg-color: transparent;
   --blyrics-footer-border-color: transparent;
@@ -60,7 +50,6 @@ $glassy-ui: false; // ==== WARNING: THIS WILL AFFECT THE PERFORMANCE ====
   --blyrics-line-height: 1.45;
   --blyrics-font-size: 5.5rem;
   --blyrics-font-weight: 700;
-  --smaller-lyrics-size: 0.6em;
   --blyrics-fullscreen-panel-size: 70%;
 
 
@@ -69,9 +58,6 @@ $glassy-ui: false; // ==== WARNING: THIS WILL AFFECT THE PERFORMANCE ====
 
 
 
-  --album-art-blur: 64px;
-  --album-brightness: 75%;
-  --album-saturation: 115%;
   --music-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 24 24'%3E%3Cpath d='M10 21q-1.65 0-2.825-1.175T6 17t1.175-2.825T10 13q.575 0 1.063.138t.937.412V4q0-.425.288-.712T13 3h4q.425 0 .713.288T18 4v2q0 .425-.288.713T17 7h-3v10q0 1.65-1.175 2.825T10 21'/%3E%3C/svg%3E%0A");
 
 
@@ -84,11 +70,15 @@ $glassy-ui: false; // ==== WARNING: THIS WILL AFFECT THE PERFORMANCE ====
 
 
 
+  /* Blyrics already animates each word through these 4 stops (from -> peak ->
+     settle -> to), timed to when that word is sung, via the Web Animations
+     API — this is the built-in lever for a per-word "pop", so the expand
+     effect is tuned here rather than fought with a competing CSS transform. */
   --blyrics-wobble-duration: 1.75s;
-  --blyrics-word-wobble-transform-from: translateY(0px) scaleX(1);
-  --blyrics-word-wobble-transform-peak: scaleX(1.025);
-  --blyrics-word-wobble-transform-settle: translateY(-0.1em) scaleX(1.005);
-  --blyrics-word-wobble-transform-to: translateY(-0.1em) scaleX(1);
+  --blyrics-word-wobble-transform-from: translateY(0px) scale(1);
+  --blyrics-word-wobble-transform-peak: translateY(-0.04em) scale(1.14);
+  --blyrics-word-wobble-transform-settle: translateY(-0.1em) scale(1.03);
+  --blyrics-word-wobble-transform-to: translateY(-0.1em) scale(1);
 
   --blyrics-letter-wave-duration: 1s;
 }
@@ -122,6 +112,8 @@ $glassy-ui: false; // ==== WARNING: THIS WILL AFFECT THE PERFORMANCE ====
 
 .blyrics--word {
   --blyrics-glow-color: color(display-p3 1 1 1 / 0.3);
+  /* So the wobble/pop scale above expands from the word's middle, not an edge */
+  transform-origin: center !important;
 }
 
 .blyrics--word[data-long-word="true"] {
@@ -209,13 +201,6 @@ $glassy-ui: false; // ==== WARNING: THIS WILL AFFECT THE PERFORMANCE ====
   .blyrics--wave-rect {
     d: path("M -24 3.9 L 47 4 L 47 30 L -24 30 Z");
   }
-
-
-/* 
-  .blyrics--animating.blyrics--paused > .blyrics--instrumental-icon, .blyrics--paused::before, .blyrics--paused::after {
-    animation-play-state: paused !important;
-  }
-}*/
 }
 
 .blyrics-container[data-sync="none"] > div { 
@@ -349,43 +334,40 @@ ytmusic-player-page:before { /* Cool blured background with Blyrics! */
 }
 
 /* Duets: only kicks in when a second singer (v2/v3) appears in the song.
-   Main singer sits on the left, other singers on the right, and whichever
-   line is being sung moves to the center. */
+   Main singer sits left of center, other singers right of center, and
+   whichever line is being sung slides smoothly back to the middle.
+
+   This moves lines with `left` instead of `justify-content`/`text-align`
+   (which can't be transitioned — browsers jump straight to the new value)
+   or `transform` (which blyrics' own JS permanently animates per line for
+   the active/inactive scale pop, via the Web Animations API — any
+   transform set from CSS here would just be overridden by that and never
+   show). `left` is free for us to use and animates smoothly. The one
+   trade-off: lines sit at a fixed distance from center rather than flush
+   against the panel's edge. */
 .blyrics-container:has(> .blyrics--line[data-agent="v2"], > .blyrics--line[data-agent="v3"]) {
+  --duet-offset: 18%;
 
-  /* Main singer on the left */
+  & > .blyrics--line {
+    position: relative !important;
+    transition: left 0.45s var(--bezier-hover, ease) !important;
+  }
+
+  /* Main singer, resting: left of center */
   & > .blyrics--line:not(.blyrics--active) {
-    justify-content: flex-start !important;
-    align-items: flex-start !important;
-    text-align: left !important;
-    transform-origin: left center !important;
+    left: calc(var(--duet-offset) * -1);
   }
 
-  /* Other singers on the right */
+  /* Other singers, resting: right of center */
   & > .blyrics--line:is([data-agent="v2"], [data-agent="v3"]):not(.blyrics--active) {
-    justify-content: flex-end !important;
-    align-items: flex-end !important;
-    text-align: right !important;
-    transform-origin: right center !important;
+    left: var(--duet-offset);
   }
 
-  /* Everyone singing together, instrumental breaks, and the current line stay centered */
+  /* Everyone singing together, instrumental breaks, and the current line slide to center */
   & > .blyrics--line[data-agent="v1000"],
   & > .blyrics--line.blyrics--instrumental,
   & > .blyrics--line.blyrics--active {
-    justify-content: center !important;
-    align-items: center !important;
-    text-align: center !important;
-    transform-origin: center center !important;
-  }
-
-  /* Background vocals and romanization follow their line's side */
-  & > .blyrics--line .blyrics-background-line {
-    text-align: inherit !important;
-  }
-  & > .blyrics--line.blyrics--active .blyrics--romanized {
-    margin-left: auto !important;
-    margin-right: auto !important;
+    left: 0;
   }
 }
 
@@ -541,50 +523,6 @@ ytmusic-player {
     }
 }
 
-/* The tab bar 
-tp-yt-paper-tabs.ytmusic-player-page { /* The tab bar above the lyrics*/ /*
-  height: 32px;
-  background-color: transparent;
-  z-index: 100;
-  left: 50%;
-  transform: translateX(-50%);
-  box-shadow: 0 .05em .15em rgba(0, 0, 0, .1);
-  padding-left: 16px;
-  padding-right: 16px;
-  border-radius: $border-radius;
-}
-
-tp-yt-paper-tab.ytmusic-player-page::hover {
-  opacity: 0.75 !important;
-}
-
-@if $use-custom-icons == true {
-  /* custom icons *//*
-  tp-yt-paper-tab:nth-child(2).ytmusic-player-page { /* Add custom icons and yeah, this is the css way of it :/ *//*
-    opacity: 0.5;
-    width: 23px;
-    height: 23px;
-    content: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgdmlld0JveD0iMCAwIDE4IDE4Ij48cGF0aCBkPSJNMi42MzQgNS41MzdhLjkwNi45MDYgMCAxIDAgMC0xLjgxMy45MDYuOTA2IDAgMSAwIDAgMS44MTN6bTMuMTkyLS4zMjVoOS44NjVhLjU3Ni41NzYgMCAwIDAgLjU4NS0uNTc4LjU3OC41NzggMCAwIDAtLjU4NS0uNTg1SDUuODI2YS41NzQuNTc0IDAgMCAwLS41ODUuNTg1YzAgLjMyNS4yNTMuNTc4LjU4NS41Nzh6TTIuNjM0IDkuOTA2Yy41MDYgMCAuOTEtLjQwNC45MS0uOTFhLjkwNi45MDYgMCAwIDAtLjkxLS45MS45MDYuOTA2IDAgMCAwLS45MS45MWMwIC41MDYuNDA1LjkxLjkxLjkxem0zLjE5Mi0uMzI1aDkuODY1YS41ODIuNTgyIDAgMSAwIDAtMS4xNjJINS44MjZhLjU3Mi41NzIgMCAwIDAtLjU4NS41NzdjMCAuMzI1LjI1My41ODUuNTg1LjU4NXptLTMuMTkyIDQuNjk0YS45MS45MSAwIDEgMC0uMDAxLTEuODIuOTEuOTEgMCAwIDAgMCAxLjgyem0zLjE5Mi0uMzMyaDkuODY1YS41NzYuNTc2IDAgMCAwIC41ODUtLjU3Ny41NzguNTc4IDAgMCAwLS41ODUtLjU4NUg1LjgyNmEuNTc0LjU3NCAwIDAgMC0uNTg1LjU4NWMwIC4zMjQuMjUzLjU3Ny41ODUuNTc3eiIgZmlsbD0iI2ZmZiI+PC9wYXRoPjwvc3ZnPg==');
-  }
-  tp-yt-paper-tab:nth-child(2).ytmusic-player-page[aria-selected="true"] {opacity: 1;}
-  tp-yt-paper-tab:nth-child(3).ytmusic-player-page {
-    width: 23px;
-    height: 23px;
-    opacity: 0.5;
-    content: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjRkZGRkZGIj48cGF0aCBkPSJNNjQwLjA2LTE1MS44N3EtNTEuOTcgMC04OC40MS0zNi4zOC0zNi40My0zNi4zOC0zNi40My04OC4zNSAwLTUxLjk3IDM2LjM5LTg4LjI4IDM2LjQtMzYuMzIgODguMzktMzYuMzIgOS4zIDAgMTcuNzYgMS4xNSA4LjQ2IDEuMTQgMTYuMjYgNS4xOHYtMzMzLjAyaDIxNC4xMXY5MC43Nkg3NjQuNzh2MzYwLjQ4cTAgNTEuOTktMzYuMzggODguMzktMzYuMzcgMzYuMzktODguMzQgMzYuMzlaTTExMS44Ny0yOTUuNjF2LTkwLjc2aDMyNC41NHY5MC43NkgxMTEuODdabTAtMTcwLjc2di05MC43Nmg0ODIuMTV2OTAuNzZIMTExLjg3Wm0wLTE3MC43NnYtOTAuNzZoNDgyLjE1djkwLjc2SDExMS44N1oiLz48L3N2Zz4=);
-  }
-  tp-yt-paper-tab:nth-child(3).ytmusic-player-page[aria-selected="true"] {opacity: 1;}
-
-  tp-yt-paper-tab:nth-child(4).ytmusic-player-page {
-    width: 23px;
-    height: 23px;
-    opacity: 0.5;
-    content: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjRkZGRkZGIj48cGF0aCBkPSJNNDg1LTI3Ni40M3EzNS0zNSAzNS04NXYtMjc3LjE0aDEyMHYtODBINDYwdjI1My4xNHEtMTQtOC0yOS0xMnQtMzEtNHEtNTAgMC04NSAzNXQtMzUgODVxMCA1MCAzNSA4NXQ4NSAzNXE1MCAwIDg1LTM1Wm0tNSAyMDQuNTZxLTg0LjkxIDAtMTU5LjM0LTMyLjEyLTc0LjQ0LTMyLjEyLTEyOS41LTg3LjE3LTU1LjA1LTU1LjA2LTg3LjE3LTEyOS41UTcxLjg3LTM5NS4wOSA3MS44Ny00ODB0MzIuMTItMTU5LjM0cTMyLjEyLTc0LjQ0IDg3LjE3LTEyOS41IDU1LjA2LTU1LjA1IDEyOS41LTg3LjE3IDc0LjQzLTMyLjEyIDE1OS4zNC0zMi4xMnQxNTkuMzQgMzIuMTJxNzQuNDQgMzIuMTIgMTI5LjUgODcuMTcgNTUuMDUgNTUuMDYgODcuMTcgMTI5LjUgMzIuMTIgNzQuNDMgMzIuMTIgMTU5LjM0dC0zMi4xMiAxNTkuMzRxLTMyLjEyIDc0LjQ0LTg3LjE3IDEyOS41LTU1LjA2IDU1LjA1LTEyOS41IDg3LjE3UTU2NC45MS03MS44NyA0ODAtNzEuODdabTAtOTFxMTMzLjA0IDAgMjI1LjA5LTkyLjA0IDkyLjA0LTkyLjA1IDkyLjA0LTIyNS4wOSAwLTEzMy4wNC05Mi4wNC0yMjUuMDktOTIuMDUtOTIuMDQtMjI1LjA5LTkyLjA0LTEzMy4wNCAwLTIyNS4wOSA5Mi4wNC05Mi4wNCA5Mi4wNS05Mi4wNCAyMjUuMDkgMCAxMzMuMDQgOTIuMDQgMjI1LjA5IDkyLjA1IDkyLjA0IDIyNS4wOSA5Mi4wNFpNNDgwLTQ4MFoiLz48L3N2Zz4=);
-  }
-  tp-yt-paper-tab:nth-child(4).ytmusic-player-page[aria-selected="true"] {opacity: 1;}
-
-} */
-
 ytmusic-player-page tp-yt-paper-tabs .tp-yt-paper-tabs[style-target=selection-bar] {
   border-width: 4px;
   translate: 0 2px;
@@ -599,13 +537,6 @@ tp-yt-paper-tabs, tp-yt-paper-tabs > #tabsContainer.tp-yt-paper-tabs {
 ytmusic-player-page:not([is-mweb-modernization-enabled]) #side-panel:has(.blyrics-dock), #side-panel {
     position: relative !important;
 }
-
-/* blyric dock, make bottom right not overlay the tab bar 
-.blyrics-dock[data-position="bottom-right"] {
-    top: calc(100% - 48px);
-    left: calc(100% - 128px);
-    --dock-tx: -100%;
-}*/
 
 .blyrics-dock__inner { /* make the blyric dock smaller */
     pointer-events: auto;
@@ -638,7 +569,7 @@ ytmusic-player-queue-item, ytmusic-responsive-list-item-renderer[height-style=MU
   padding: 4px 8px !important;
 
   &:hover {
-    background-color: color-mix(in srgb, $font-color, transparent 92%); !important;
+    background-color: color-mix(in srgb, $font-color, transparent 92%);
   }
 }
 
